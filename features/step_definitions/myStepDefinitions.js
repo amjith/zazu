@@ -176,11 +176,13 @@ module.exports = function () {
   // assumes modifier is first
   this.When(/^I hit the hotkey "([^"]*)" (\d+) times$/, function (hotkey, times) {
     var keys = hotkey.split('+')
-    var promises = []
-    for (let i = 0; i < times; i++) {
-      promises.push(this.hitHotkey(keys[1], keys[0]))
+    let promise = this.hitHotkey(keys[1], keys[0])
+    for (let i = 1; i < times; i++) {
+      promise = promise.then(() => {
+        return this.hitHotkey(keys[1], keys[0])
+      })
     }
-    return Promise.all(promises)
+    return promise
   })
 
   this.When(/^I hit the key "([^"]*)"$/, function (hotkey) {
