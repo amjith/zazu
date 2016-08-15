@@ -8,7 +8,7 @@ Feature: Input Blocks
     And the app is launched
     When I toggle with the hotkey
     And I type in "tinytacoteam"
-    And I eventually click on the active result
+    And I click on the active result
     Then the search window is not visible
     And my clipboard contains "tinytacoteam"
 
@@ -17,6 +17,6 @@ Feature: Input Blocks
     And the app is launched
     When I toggle with the hotkey
     And I type in "food taco"
-    And I eventually click on the active result
+    And I click on the active result
     Then the search window is not visible
     And my clipboard contains "GMO tiny taco"

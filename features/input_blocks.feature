@@ -10,7 +10,7 @@ Feature: Input Blocks
     And I type in "tinytacoteam"
     Then the search window is visible
     And I have 1 result
-    And the results should contain "tinytacoteam"
+    And the results contains "tinytacoteam"
 
   Scenario: Prefix Script
     Given I have "tinytacoteam/zazu-fixture" as a plugin
@@ -27,7 +27,7 @@ Feature: Input Blocks
     And I type in "eggtimer"
     Then the search window is visible
     And I have 1 result
-    And the results should contain "Start eggtimer"
+    And the results contains "Start eggtimer"
 
   Scenario: Hotkey to an input
     Given I have "tinytacoteam/zazu-fixture" as a plugin

@@ -1,7 +1,7 @@
 module.exports = (pluginContext) => {
   return {
     respondsTo: (query) => {
-      return !query.match(/^(egg|food )/)
+      return !query.match(/^(egg|food )/) && query.length > 0
     },
     search: (query, env = {}) => {
       return new Promise((resolve, reject) => {

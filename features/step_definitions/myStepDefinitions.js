@@ -39,16 +39,14 @@ class World {
   }
 
   hasResults () {
-    return this.app.client.getHTML('.results').then((resultHtml) => {
-      return !!resultHtml
-    })
+    return this.app.client.isExisting('.results')
   }
 
   type (input) {
     this.app.client.setValue('input', input)
   }
 
-  showWindow () {
+  toggleWindow () {
     return Promise.resolve(this.hitHotkey('space', 'shift'))
   }
 
@@ -65,6 +63,10 @@ class World {
 
   clickActiveResult () {
     return this.app.client.click('li.active')
+  }
+
+  getActiveResult () {
+    return this.app.client.getText('li.active')
   }
 
   isRunning () {
@@ -99,9 +101,22 @@ const wait = (time) => {
   })
 }
 
-const eventually = (func, expectedValue, iteration) => {
+const eventually = (func, iteration) => {
   iteration = (iteration || 1)
-  if (iteration === 30) {
+  if (iteration === 20) {
+    return Promise.reject('Forever is a long time')
+  }
+  return func().catch((err) => {
+    console.error('ERROR: ', err)
+    return wait(100).then(() => {
+      return eventually(func)
+    })
+  })
+}
+
+const eventuallyAssert = (func, expectedValue, iteration) => {
+  iteration = (iteration || 1)
+  if (iteration === 20) {
     return Promise.reject('Forever is a long time')
   }
   return func().then((actualValue) => {
@@ -111,13 +126,13 @@ const eventually = (func, expectedValue, iteration) => {
       return new Promise((resolve) => {
         setTimeout(resolve, 100)
       }).then(() => {
-        return eventually(func, expectedValue, iteration + 1)
+        return eventuallyAssert(func, expectedValue, iteration + 1)
       })
     }
   }).catch((err) => {
     console.error('ERROR: ', err)
     return wait(100).then(() => {
-      return eventually(func, expectedValue, iteration + 1)
+      return eventuallyAssert(func, expectedValue, iteration + 1)
     })
   })
 }
@@ -139,7 +154,13 @@ module.exports = function () {
   })
 
   this.When(/^I toggle with the hotkey$/, function () {
-    return this.showWindow()
+    return wait(100).then(() => {
+      return eventually(() => this.isWindowVisible()).then((current) => {
+        return this.toggleWindow().then(() => {
+          return eventuallyAssert(() => this.isWindowVisible(), !current)
+        })
+      })
+    })
   })
 
   // assumes modifier is first
@@ -148,38 +169,50 @@ module.exports = function () {
     return this.hitHotkey(keys[1], keys[0])
   })
 
+  // assumes modifier is first
+  this.When(/^I hit the hotkey "([^"]*)" (\d+) times$/, function (hotkey, times) {
+    var keys = hotkey.split('+')
+    var promises = []
+    for (let i = 0; i < times; i++) {
+      promises.push(this.hitHotkey(keys[1], keys[0]))
+    }
+    return Promise.all(promises).then(() => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, 1000)
+      })
+    })
+  })
+
   this.When(/^I hit the key "([^"]*)"$/, function (hotkey) {
     return this.hitHotkey(hotkey)
   })
 
-  this.When(/^I eventually click on the active result$/, function () {
-    return eventually(() => this.hasResults(), true).then(() => {
+  this.When(/^I click on the active result$/, function () {
+    return eventuallyAssert(() => this.hasResults(), true).then(() => {
       return wait(100)
     }).then(() => {
       return this.clickActiveResult()
     })
   })
 
-  this.Then(/^my clipboard contains "([^"]*)"$/, function (expected, callback) {
-    this.readClipboard().then((actual) => {
-      if (actual === expected) {
-        callback()
-      } else {
-        callback(new Error('Expected "' + expected + '" to be in your clipbaord but found "' + actual + '"'))
+  this.Then(/^my clipboard contains "([^"]*)"$/, function (expected) {
+    return this.readClipboard().then((actual) => {
+      if (actual !== expected) {
+        throw new Error('Expected "' + expected + '" to be in your clipbaord but found "' + actual + '"')
       }
     })
   })
 
   this.Then(/^the search window is not visible$/, function () {
-    return eventually(() => this.isWindowVisible(), false)
+    return eventuallyAssert(() => this.isWindowVisible(), false)
   })
 
   this.Then(/^the search window is visible$/, function () {
-    return eventually(() => this.isWindowVisible(), true)
+    return eventuallyAssert(() => this.isWindowVisible(), true)
   })
 
   this.Then(/^I have (\d+) results?$/, function (expected) {
-    return eventually(() => {
+    return eventuallyAssert(() => {
       return this.getResultItems().then((items) => items.length)
     }, parseInt(expected, 10))
   })
@@ -189,12 +222,26 @@ module.exports = function () {
     callback()
   })
 
-  this.Then(/^the results should contain "([^"]*)"$/, function (subset, callback) {
-    this.getResults().then((resultText) => {
-      if (resultText.match(subset)) {
-        callback()
-      } else {
-        callback(new Error('Expected results to contain "' + subset + '"'))
+  this.When(/^I have no results$/, function () {
+    return eventuallyAssert(() => this.hasResults(), false)
+  })
+
+  this.Then(/^the active result contains "([^"]*)"$/, function (subset) {
+    return eventuallyAssert(() => this.hasResults(), true).then(() => {
+      return wait(100)
+    }).then(() => {
+      return this.getActiveResult().then((activeResultText) => {
+        if (!activeResultText.match(subset)) {
+          throw new Error('Expected active result to contain "' + subset + '" but found "' + activeResultText + '"')
+        }
+      })
+    })
+  })
+
+  this.Then(/^the results contains "([^"]*)"$/, function (subset) {
+    return this.getResults().then((resultText) => {
+      if (!resultText.match(subset)) {
+        throw new Error('Expected results to contain "' + subset + '"')
       }
     })
   })

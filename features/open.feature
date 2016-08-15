@@ -13,6 +13,7 @@ Feature: Open
     Given I have "tinytacoteam/zazu-fixture" as a plugin
     And the app is launched
     When I toggle with the hotkey
+    And I type in "food tiny"
     And I toggle with the hotkey
     Then the search window is not visible
 
@@ -22,3 +23,13 @@ Feature: Open
     When I toggle with the hotkey
     And I hit the key "escape"
     Then the search window is not visible
+
+  Scenario: Removes results
+    Given I have "tinytacoteam/zazu-fixture" as a plugin
+    And the app is launched
+    When I toggle with the hotkey
+    And I type in "food tiny"
+    And I toggle with the hotkey
+    And I toggle with the hotkey
+    Then the search window is visible
+    And I have no results
