@@ -6,16 +6,16 @@ Feature: Input Blocks
   Scenario: Root Script
     Given I have "tinytacoteam/zazu-fixture" as a plugin
     And the app is launched
-    When I toggle it open
+    When I toggle with the hotkey
     And I type in "tinytacoteam"
-    Then the search window is eventually visible
-    And I have 1 results
+    Then the search window is visible
+    And I have 1 result
     And the results should contain "tinytacoteam"
 
   Scenario: Prefix Script
     Given I have "tinytacoteam/zazu-fixture" as a plugin
     And the app is launched
-    When I toggle it open
+    When I toggle with the hotkey
     And I type in "food cookie"
     Then the search window is visible
     And I have 2 results
@@ -23,10 +23,10 @@ Feature: Input Blocks
   Scenario: Keyword
     Given I have "tinytacoteam/zazu-fixture" as a plugin
     And the app is launched
-    When I toggle it open
+    When I toggle with the hotkey
     And I type in "eggtimer"
     Then the search window is visible
-    And I have 1 results
+    And I have 1 result
     And the results should contain "Start eggtimer"
 
   Scenario: Hotkey to an input

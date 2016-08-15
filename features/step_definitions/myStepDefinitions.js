@@ -53,6 +53,9 @@ class World {
   }
 
   hitHotkey (key, modifier) {
+    if (!modifier) {
+      return Promise.resolve(robot.keyTap(key))
+    }
     return Promise.resolve(robot.keyTap(key, modifier))
   }
 
@@ -135,7 +138,7 @@ module.exports = function () {
     return this.open()
   })
 
-  this.When(/^I toggle it open$/, function () {
+  this.When(/^I toggle with the hotkey$/, function () {
     return this.showWindow()
   })
 
@@ -143,6 +146,10 @@ module.exports = function () {
   this.When(/^I hit the hotkey "([^"]*)"$/, function (hotkey) {
     var keys = hotkey.split('+')
     return this.hitHotkey(keys[1], keys[0])
+  })
+
+  this.When(/^I hit the key "([^"]*)"$/, function (hotkey) {
+    return this.hitHotkey(hotkey)
   })
 
   this.When(/^I eventually click on the active result$/, function () {
@@ -167,11 +174,11 @@ module.exports = function () {
     return eventually(() => this.isWindowVisible(), false)
   })
 
-  this.Then(/^the search window is(?: eventually)? visible$/, function () {
+  this.Then(/^the search window is visible$/, function () {
     return eventually(() => this.isWindowVisible(), true)
   })
 
-  this.Then(/^I have (\d+) results$/, function (expected) {
+  this.Then(/^I have (\d+) results?$/, function (expected) {
     return eventually(() => {
       return this.getResultItems().then((items) => items.length)
     }, parseInt(expected, 10))
