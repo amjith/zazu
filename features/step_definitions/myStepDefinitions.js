@@ -51,10 +51,10 @@ class World {
   }
 
   hitHotkey (key, modifier) {
-    if (!modifier) {
-      return Promise.resolve(robot.keyTap(key))
-    }
-    return Promise.resolve(robot.keyTap(key, modifier))
+    const value = modifier ? robot.keyTap(key, modifier) : robot.keyTap(key)
+    return Promise.resolve(value).then(() => {
+      return wait(100)
+    })
   }
 
   close () {
@@ -163,6 +163,10 @@ module.exports = function () {
     })
   })
 
+  this.When(/^I wait (\d+) ms$/, function (ms) {
+    return wait(parseInt(ms, 10))
+  })
+
   // assumes modifier is first
   this.When(/^I hit the hotkey "([^"]*)"$/, function (hotkey) {
     var keys = hotkey.split('+')
@@ -176,11 +180,7 @@ module.exports = function () {
     for (let i = 0; i < times; i++) {
       promises.push(this.hitHotkey(keys[1], keys[0]))
     }
-    return Promise.all(promises).then(() => {
-      return new Promise((resolve) => {
-        setTimeout(resolve, 1000)
-      })
-    })
+    return Promise.all(promises)
   })
 
   this.When(/^I hit the key "([^"]*)"$/, function (hotkey) {
@@ -217,9 +217,9 @@ module.exports = function () {
     }, parseInt(expected, 10))
   })
 
-  this.When(/^I type in "([^"]*)"$/, function (input, callback) {
+  this.When(/^I type in "([^"]*)"$/, function (input) {
     this.type(input)
-    callback()
+    return wait(100)
   })
 
   this.When(/^I have no results$/, function () {
