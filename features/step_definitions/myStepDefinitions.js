@@ -79,6 +79,7 @@ class World {
 
   getResultItems () {
     return this.app.client.getHTML('.results').then((results) => {
+      console.log('results', results)
       return $(results).find('li')
     })
   }
@@ -231,6 +232,8 @@ module.exports = function () {
   this.Then(/^the active result contains "([^"]*)"$/, function (subset) {
     return eventuallyAssert(() => this.hasResults(), true).then(() => {
       return wait(100)
+    }).then(() => {
+      return this.getResultItems()
     }).then(() => {
       return this.getActiveResult().then((activeResultText) => {
         if (!activeResultText.match(subset)) {
