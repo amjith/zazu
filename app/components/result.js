@@ -43,7 +43,6 @@ const Result = React.createClass({
       'li',
       {
         onClick: this.click,
-        onMouseOver: this.activate,
         className: active ? 'active' : 'inactive',
         ref: this.setReference,
       },
